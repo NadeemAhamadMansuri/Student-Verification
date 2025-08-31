@@ -7,22 +7,29 @@ import os
 import uuid
 import json
 
-
 # -------------------------------
 # Firebase initialization
 # -------------------------------
-firebase_key = os.environ.get("service_account_json")  # Render environment variable
-if not firebase_key:
-    raise Exception("service_account_json environment variable not set")
+cred = None
 
-# escaped newline को actual newline में बदलें ताकि PEM सही आए
-firebase_key = firebase_key.replace('\\n', '\n')
+# 1. अगर local में service_account.json file है तो वहीं से load करो
+if os.path.exists("service_account.json"):
+    cred = credentials.Certificate("service_account.json")
 
-cred_dict = json.loads(firebase_key)
-cred = credentials.Certificate(cred_dict)
+# 2. वरना env variable से load करो (Render / Production)
+else:
+    firebase_key = os.environ.get("service_account_json")
+    if not firebase_key:
+        raise Exception("service_account_json environment variable not set")
+
+    # escaped newline को actual newline में बदलो
+    firebase_key = firebase_key.replace('\\n', '\n')
+
+    cred_dict = json.loads(firebase_key)
+    cred = credentials.Certificate(cred_dict)
+
 firebase_admin.initialize_app(cred)
 db = firestore.client()
-
 
 # -------------------------------
 # Flask setup
@@ -31,13 +38,11 @@ app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "uploads"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-
 # -------------------------------
 # Load Excel student data
 # -------------------------------
-excel_file = os.environ.get("STUDENT_EXCEL", "students.xlsx")  # Render env variable for Excel name
+excel_file = os.environ.get("STUDENT_EXCEL", "students.xlsx")
 df = pd.read_excel(excel_file)
-
 
 # -------------------------------
 # Routes
@@ -46,7 +51,6 @@ df = pd.read_excel(excel_file)
 def index():
     student_data = df.iloc[0].to_dict()  # Load first student row (dynamic can be added later)
     return render_template("index.html", student_data=student_data)
-
 
 @app.route("/submit", methods=["POST"])
 def submit():
@@ -71,14 +75,13 @@ def submit():
     db.collection("student_verifications").add(submitted_data)
 
     # Save to Excel
-    excel_path = os.environ.get("SUBMITTED_EXCEL", "submitted_data.xlsx")  # Render env variable
+    excel_path = os.environ.get("SUBMITTED_EXCEL", "submitted_data.xlsx")
     existing_df = pd.read_excel(excel_path) if os.path.exists(excel_path) else pd.DataFrame()
     new_df = pd.DataFrame([submitted_data])
     final_df = pd.concat([existing_df, new_df], ignore_index=True)
     final_df.to_excel(excel_path, index=False)
 
     return "Form submitted successfully!"
-
 
 # -------------------------------
 # Run app
