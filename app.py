@@ -5,24 +5,38 @@ from firebase_admin import credentials, firestore
 from werkzeug.utils import secure_filename
 import os
 import uuid
+import json
 
+# -------------------------------
 # Firebase initialization
-cred = credentials.Certificate("serviceAccountKey.json")
+# -------------------------------
+firebase_key = os.environ.get("FIREBASE_KEY")  # Render environment variable
+if not firebase_key:
+    raise Exception("FIREBASE_KEY environment variable not set")
+cred_dict = json.loads(firebase_key)
+cred = credentials.Certificate(cred_dict)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
+# -------------------------------
+# Flask setup
+# -------------------------------
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "uploads"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
+# -------------------------------
 # Load Excel student data
-excel_file = "students.xlsx"
+# -------------------------------
+excel_file = os.environ.get("STUDENT_EXCEL", "students.xlsx")  # Render env variable for Excel name
 df = pd.read_excel(excel_file)
 
+# -------------------------------
+# Routes
+# -------------------------------
 @app.route("/")
 def index():
-    # For now load first student row (can change for dynamic use)
-    student_data = df.iloc[0].to_dict()
+    student_data = df.iloc[0].to_dict()  # Load first student row (dynamic can be added later)
     return render_template("index.html", student_data=student_data)
 
 @app.route("/submit", methods=["POST"])
@@ -41,19 +55,23 @@ def submit():
         else:
             uploaded_files[file_key] = None
 
-    # Merge data
+    # Merge form data and uploaded files
     submitted_data = {**form_data, **uploaded_files}
 
     # Save to Firebase
     db.collection("student_verifications").add(submitted_data)
 
     # Save to Excel
-    existing_df = pd.read_excel("submitted_data.xlsx") if os.path.exists("submitted_data.xlsx") else pd.DataFrame()
+    excel_path = os.environ.get("SUBMITTED_EXCEL", "submitted_data.xlsx")  # Render env variable
+    existing_df = pd.read_excel(excel_path) if os.path.exists(excel_path) else pd.DataFrame()
     new_df = pd.DataFrame([submitted_data])
     final_df = pd.concat([existing_df, new_df], ignore_index=True)
-    final_df.to_excel("submitted_data.xlsx", index=False)
+    final_df.to_excel(excel_path, index=False)
 
     return "Form submitted successfully!"
 
+# -------------------------------
+# Run app
+# -------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
