@@ -10,7 +10,7 @@ import json
 # -------------------------------
 # Firebase initialization
 # -------------------------------
-firebase_key = os.environ.get("FIREBASE_KEY")  # Render environment variable
+firebase_key = os.environ.get("service_account_json")  # Render environment variable
 if not firebase_key:
     raise Exception("FIREBASE_KEY environment variable not set")
 cred_dict = json.loads(firebase_key)
