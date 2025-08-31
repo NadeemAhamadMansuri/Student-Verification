@@ -1,0 +1,18 @@
+# Secrets
+.env
+service_account.json
+firebase_config.json
+firebase_config_Backup.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local backups and uploads
+student-verification-backup/
+uploads/
+
+# Excel submissions (optional)
+submitted_data.xlsx
