@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request
 import pandas as pd
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -12,21 +12,20 @@ import json
 # -------------------------------
 cred = None
 
-# 1. अगर local में service_account.json file है तो वहीं से load करो
 if os.path.exists("service_account.json"):
+    # Local JSON file
     cred = credentials.Certificate("service_account.json")
-
-# 2. वरना env variable से load करो (Render / Production)
 else:
+    # Environment variable (Render)
     firebase_key = os.environ.get("service_account_json")
     if not firebase_key:
         raise Exception("service_account_json environment variable not set")
-
-    # escaped newline को actual newline में बदलो
-    firebase_key = firebase_key.replace('\\n', '\n')
-
-    cred_dict = json.loads(firebase_key)
-    cred = credentials.Certificate(cred_dict)
+    try:
+        firebase_key = firebase_key.replace('\\n', '\n')
+        cred_dict = json.loads(firebase_key)
+        cred = credentials.Certificate(cred_dict)
+    except Exception as e:
+        raise Exception(f"Failed to load Firebase credentials: {e}")
 
 firebase_admin.initialize_app(cred)
 db = firestore.client()
@@ -35,21 +34,28 @@ db = firestore.client()
 # Flask setup
 # -------------------------------
 app = Flask(__name__)
-app.config["UPLOAD_FOLDER"] = "uploads"
-os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+UPLOAD_FOLDER = "uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # -------------------------------
 # Load Excel student data
 # -------------------------------
 excel_file = os.environ.get("STUDENT_EXCEL", "students.xlsx")
-df = pd.read_excel(excel_file)
+try:
+    df = pd.read_excel(excel_file)
+except FileNotFoundError:
+    df = pd.DataFrame()  # Empty if no file found
 
 # -------------------------------
 # Routes
 # -------------------------------
 @app.route("/")
 def index():
-    student_data = df.iloc[0].to_dict()  # Load first student row (dynamic can be added later)
+    if df.empty:
+        student_data = {}
+    else:
+        student_data = df.iloc[0].to_dict()
     return render_template("index.html", student_data=student_data)
 
 @app.route("/submit", methods=["POST"])
@@ -60,7 +66,7 @@ def submit():
     uploaded_files = {}
     for file_key in request.files:
         file = request.files[file_key]
-        if file and file.filename != "":
+        if file and file.filename:
             filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
             filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
             file.save(filepath)
@@ -76,7 +82,10 @@ def submit():
 
     # Save to Excel
     excel_path = os.environ.get("SUBMITTED_EXCEL", "submitted_data.xlsx")
-    existing_df = pd.read_excel(excel_path) if os.path.exists(excel_path) else pd.DataFrame()
+    try:
+        existing_df = pd.read_excel(excel_path)
+    except FileNotFoundError:
+        existing_df = pd.DataFrame()
     new_df = pd.DataFrame([submitted_data])
     final_df = pd.concat([existing_df, new_df], ignore_index=True)
     final_df.to_excel(excel_path, index=False)
