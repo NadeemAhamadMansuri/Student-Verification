@@ -17,18 +17,20 @@ if os.path.exists("service_account.json"):
     cred = credentials.Certificate("service_account.json")
 else:
     # Environment variable (Render)
-    firebase_key = os.environ.get("service_account_json")
-    if not firebase_key:
-        raise Exception("service_account_json environment variable not set")
+    base64_str = os.environ.get("SERVICE_ACCOUNT_BASE64")
+    if not base64_str:
+        raise Exception("SERVICE_ACCOUNT_BASE64 environment variable not set")
     try:
-        firebase_key = firebase_key.replace('\\n', '\n')
-        cred_dict = json.loads(firebase_key)
+        import base64
+        json_bytes = base64.b64decode(base64_str)
+        cred_dict = json.loads(json_bytes)
         cred = credentials.Certificate(cred_dict)
     except Exception as e:
         raise Exception(f"Failed to load Firebase credentials: {e}")
 
 firebase_admin.initialize_app(cred)
 db = firestore.client()
+
 
 # -------------------------------
 # Flask setup
