@@ -1,189 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Verification Form</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Verification Form</title>
+<style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
+    body{background: linear-gradient(135deg, #6D5BBA, #8D58BF);display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:20px;}
+    h1{text-align:center;margin-bottom:20px;color:#1f2937;}
+    form{background:#fff;padding:30px 40px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.1);max-width:700px;width:100%;}
+    label{display:block;font-weight:600;margin-bottom:6px;color:#374151;}
+    input[type="text"],input[type="number"],input[type="file"],select{width:100%;padding:10px 12px;margin-bottom:15px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;transition:border-color 0.3s,box-shadow 0.3s;}
+    input[type="text"]:focus,input[type="number"]:focus,input[type="file"]:focus,select:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.2);outline:none;}
+    button[type="submit"]{background-color:#3b82f6;color:#fff;font-weight:600;padding:12px 20px;border:none;border-radius:8px;cursor:pointer;font-size:16px;transition:background-color 0.3s;}
+    button[type="submit"]:hover{background-color:#2563eb;}
+    input[type="file"]{padding:5px 0;}
+    @media (max-width:768px){form{padding:20px;}}
+</style>
 </head>
 <body>
-    <h1>Student Verification Form</h1>
-    <form id="studentForm" action="/submit" method="POST" enctype="multipart/form-data">
-        <label>Class:</label>
-        <input type="text" name="class" value="{{ student_data['Class'] }}" readonly><br>
+<form id="studentForm" action="/submit" method="POST" enctype="multipart/form-data">
+<h1>Student Verification Form</h1>
 
-        <label>Section:</label>
-        <input type="text" name="section" value="{{ student_data['Section'] }}" readonly><br>
+<label>Class:</label>
+<input type="text" name="class" value="{{ student_data['Class'] }}" readonly>
 
-        <label>Student Name:</label>
-        <input type="text" name="name" value="{{ student_data['Name'] }}" readonly><br>
+<label>Section:</label>
+<input type="text" name="section" value="{{ student_data['Section'] }}" readonly>
 
-        <label>Father's Name:</label>
-        <input type="text" name="father_name" value="{{ student_data['Father Name'] }}" readonly><br>
+<label>Student Name:</label>
+<input type="text" name="name" value="{{ student_data['Name'] }}" readonly>
 
-        <label>Mother's Name:</label>
-        <input type="text" name="mother_name" value="{{ student_data['Mother Name'] }}" readonly><br>
+<label>Father's Name:</label>
+<input type="text" name="father_name" value="{{ student_data['Father Name'] }}" readonly>
 
-        <label>Mobile:</label>
-        <input type="text" name="mobile" value="{{ student_data['Mobile'] }}" readonly><br>
+<label>Mother's Name:</label>
+<input type="text" name="mother_name" value="{{ student_data['Mother Name'] }}" readonly>
 
-        <label>Date of Birth:</label>
-        <input type="text" name="dob" value="{{ student_data['DOB'] }}" readonly><br>
+<label>Mobile:</label>
+<input type="text" name="mobile" value="{{ student_data['Mobile'] }}" readonly>
 
-        <label>Aadhar No:</label>
-        <input type="text" name="aadhar"><br>
+<label>Date of Birth:</label>
+<input type="text" name="dob" id="dob" value="{{ student_data['Date of Birth'] }}" readonly>
 
-        <label>Gender:</label>
-        <select name="gender">
-            <option value="">Select</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-        </select><br>
 
-        <label>Ladli Laxmi Yojna:</label>
-        <select name="ladli_yojna" onchange="toggleUpload(this,'ladli_certificate')">
-            <option value="">Select</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-        </select>
-        <input type="file" name="ladli_certificate" id="ladli_certificate" style="display:none"><br>
+<label>Aadhar No:</label>
+<input type="text" name="aadhar">
 
-        <label>Samagra ID:</label>
-        <input type="text" name="samagra_id"><br>
+<label>Gender:</label>
+<select name="gender" id="genderSelect">
+    <option value="">Select</option>
+    <option value="Male">Male</option>
+    <option value="Female">Female</option>
+    <option value="Other">Other</option>
+</select>
 
-        <label>Blood Group:</label>
-        <input type="text" name="blood_group"><br>
+<div id="ladli_section" style="display:none; margin-top:10px;">
+    <label>Ladli Laxmi Yojna:</label>
+    <select name="ladli_yojna" id="ladliSelect">
+        <option value="">Select</option>
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+    </select>
+    
+    <!-- Certificate Field -->
+    <div id="ladli_file_container" style="display:none; margin-top:5px;">
+        <label>Ladli Laxmi Yojna Certificate:</label>
+        <input type="file" name="ladli_certificate" id="ladli_certificate">
+    </div>
+</div>
 
-        <label>Category:</label>
-        <select name="category" onchange="toggleUpload(this,'caste_certificate')">
-            <option value="">Select</option>
-            <option value="General">General</option>
-            <option value="OBC">OBC</option>
-            <option value="SC">SC</option>
-            <option value="ST">ST</option>
-        </select>
-        <input type="file" name="caste_certificate" id="caste_certificate" style="display:none"><br>
+<label>Samagra ID:</label>
+<input type="text" name="samagra_id">
 
-        <label>Religion:</label>
-        <input type="text" name="religion"><br>
+<label>Blood Group:</label>
+<input type="text" name="blood_group">
 
-        <label>Domicile:</label>
-        <input type="file" name="domicile"><br>
+<label>Category:</label>
+<select name="category" id="categorySelect">
+    <option value="">Select</option>
+    <option value="General">General</option>
+    <option value="OBC">OBC</option>
+    <option value="SC">SC</option>
+    <option value="ST">ST</option>
+</select>
+<div id="caste_file_container" style="display:none; margin-top:5px;">
+    <label>Caste Certificate:</label>
+    <input type="file" name="caste_certificate" id="caste_certificate">
+</div>
 
-        <label>BPL Card:</label>
-        <select name="bpl_card" onchange="toggleField(this,'bpl_card_number')">
-            <option value="">Select</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-        </select>
-        <input type="text" name="bpl_card_number" id="bpl_card_number" style="display:none"><br>
+<label>Religion:</label>
+<input type="text" name="religion">
 
-        <label>Only Girl Child:</label>
-        <select name="only_girl_child">
-            <option value="">Select</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-        </select><br>
+<label>Domicile:</label>
+<input type="file" name="domicile">
 
-        <label>Siblings Count:</label>
-        <input type="number" name="siblings_count"><br>
+<label>BPL Card:</label>
+<select name="bpl_card" id="bplSelect">
+    <option value="">Select</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+</select>
+<div id="bpl_card_container" style="display:none; margin-top:5px;">
+    <label>BPL Card Number:</label>
+    <input type="text" name="bpl_card_number" id="bpl_card_number">
+</div>
 
-        <label>Is Father Dead:</label>
-        <select name="is_father_dead">
-            <option value="">Select</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-        </select><br>
+<label>Only Girl Child:</label>
+<select name="only_girl_child">
+    <option value="">Select</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+</select>
 
-        <label>Father Occupation:</label>
-        <input type="text" name="father_occupation"><br>
+<label>Siblings Count:</label>
+<select name="siblings_count">
+    <option value="">Select</option>
+    <option value="0">0</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5+">5+</option>
+</select>
 
-        <label>Mother Occupation:</label>
-        <input type="text" name="mother_occupation"><br>
+<label>Is Father Dead:</label>
+<select name="is_father_dead">
+    <option value="">Select</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+</select>
 
-        <label>Father Income:</label>
-        <input type="number" id="father_income" name="father_income" oninput="calculateTotalIncome()"><br>
+<label>Father Occupation:</label>
+<input type="text" name="father_occupation">
 
-        <label>Mother Income:</label>
-        <input type="number" id="mother_income" name="mother_income" oninput="calculateTotalIncome()"><br>
+<label>Mother Occupation:</label>
+<input type="text" name="mother_occupation">
 
-        <label>Total Income:</label>
-        <input type="number" id="total_income" name="total_income" readonly><br>
+<label>Father Income:</label>
+<input type="number" id="father_income" name="father_income" oninput="calculateTotalIncome()">
 
-        <label>Is Student Orphan:</label>
-        <select name="is_student_orphan">
-            <option value="">Select</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-        </select><br>
+<label>Mother Income:</label>
+<input type="number" id="mother_income" name="mother_income" oninput="calculateTotalIncome()">
 
-        <label>Is Father Disabled:</label>
-        <select name="is_father_disabled">
-            <option value="">Select</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-        </select><br>
+<label>Total Income:</label>
+<input type="number" id="total_income" name="total_income" readonly>
 
-        <label>Livelihood:</label>
-        <select name="livelihood" onchange="toggleGovtFields(this)">
-            <option value="">Select</option>
-            <option value="govt">Govt</option>
-            <option value="non-govt">Non-Govt</option>
-        </select><br>
+<label>Is Student Orphan:</label>
+<select name="is_student_orphan">
+    <option value="">Select</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+</select>
 
-        <div id="govt_fields" style="display:none">
-            <label>Retired:</label>
-            <select name="retired">
-                <option value="">Select</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-            </select><br>
+<label>Is Father Disabled:</label>
+<select name="is_father_disabled">
+    <option value="">Select</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+</select>
 
-            <label>Department:</label>
-            <input type="text" name="department"><br>
-        </div>
+<label>Livelihood:</label>
+<select name="livelihood" id="livelihoodSelect">
+    <option value="">Select</option>
+    <option value="govt">Govt</option>
+    <option value="non-govt">Non-Govt</option>
+</select>
 
-        <label>Income Tax Payer:</label>
-        <select name="income_tax_payer">
-            <option value="">Select</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-        </select><br>
+<div id="govt_fields" style="display:none">
+    <label>Retired:</label>
+    <select name="retired">
+        <option value="">Select</option>
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+    </select>
 
-        <label>Land More Than 10 Acres:</label>
-        <select name="land_more_than_10_acres">
-            <option value="">Select</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
-        </select><br>
+    <label>Department:</label>
+    <input type="text" name="department">
+</div>
 
-        <label>Handicapped Certificate:</label>
-        <input type="file" name="handicapped_certificate"><br>
+<label>Income Tax Payer:</label>
+<select name="income_tax_payer">
+    <option value="">Select</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+</select>
 
-        <label>Bank Passbook:</label>
-        <input type="file" name="bank_passbook"><br>
+<label>Land More Than 10 Acres:</label>
+<select name="land_more_than_10_acres">
+    <option value="">Select</option>
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+</select>
 
-        <label>Income Certificate:</label>
-        <input type="file" name="income_certificate"><br>
+<label>Handicapped Certificate:</label>
+<input type="file" name="handicapped_certificate">
 
-        <button type="submit">Submit</button>
-    </form>
+<label>Bank Passbook:</label>
+<input type="file" name="bank_passbook">
+
+<label>Income Certificate:</label>
+<input type="file" name="income_certificate">
+
+<button type="submit">Submit</button>
+</form>
 
 <script>
-function toggleUpload(selectElem, inputId) {
-    document.getElementById(inputId).style.display = (selectElem.value === "Yes" || selectElem.value !== "") ? "block" : "none";
-}
-function toggleField(selectElem, inputId) {
-    document.getElementById(inputId).style.display = (selectElem.value === "Yes") ? "block" : "none";
-}
 function calculateTotalIncome() {
     let fatherIncome = parseFloat(document.getElementById('father_income').value) || 0;
     let motherIncome = parseFloat(document.getElementById('mother_income').value) || 0;
     document.getElementById('total_income').value = fatherIncome + motherIncome;
 }
-function toggleGovtFields(selectElem) {
-    document.getElementById("govt_fields").style.display = (selectElem.value === "govt") ? "block" : "none";
-}
+
+
+
+// Gender toggle for Ladli Laxmi section
+document.getElementById('genderSelect').addEventListener('change', function(){
+    if(this.value === 'Female'){
+        document.getElementById('ladli_section').style.display = 'block';
+    } else {
+        document.getElementById('ladli_section').style.display = 'none';
+        document.getElementById('ladliSelect').value = '';
+        document.getElementById('ladli_file_container').style.display = 'none';
+        document.getElementById('ladli_certificate').value = '';
+    }
+});
+
+// Ladli Laxmi toggle for certificate
+document.getElementById('ladliSelect').addEventListener('change', function(){
+    if(this.value === 'Yes'){
+        document.getElementById('ladli_file_container').style.display = 'block';
+    } else {
+        document.getElementById('ladli_file_container').style.display = 'none';
+        document.getElementById('ladli_certificate').value = '';
+    }
+});
+
+
+
+
+
+// Category certificate toggle
+document.getElementById('categorySelect').addEventListener('change', function(){
+    let cat = this.value;
+    document.getElementById('caste_file_container').style.display = (cat === 'OBC' || cat === 'SC' || cat === 'ST') ? 'block' : 'none';
+});
+
+// BPL card number toggle
+document.getElementById('bplSelect').addEventListener('change', function(){
+    document.getElementById('bpl_card_container').style.display = (this.value === 'Yes') ? 'block' : 'none';
+});
+
+// Livelihood govt fields toggle
+document.getElementById('livelihoodSelect').addEventListener('change', function(){
+    document.getElementById('govt_fields').style.display = (this.value === 'govt') ? 'block' : 'none';
+});
 </script>
 </body>
 </html>

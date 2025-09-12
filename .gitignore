@@ -1,9 +1,9 @@
 # Secrets
 .env
-service_account.json
+firebase_service_account.json
 firebase_config.json
 firebase_config_Backup.json
-
+credentials.json
 # Python cache
 __pycache__/
 *.pyc
