@@ -7,6 +7,10 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
 
 # -----------------------
@@ -31,6 +35,7 @@ RECEIVER_EMAIL = "nadeemahamadmansuri@gmail.com"     # jis Gmail pe files aayeng
 
 def send_email_with_files(subject, body, filepaths):
     try:
+        logger.info("Preparing email...")  # Log email start
         msg = MIMEMultipart()
         msg["From"] = SENDER_EMAIL
         msg["To"] = RECEIVER_EMAIL
@@ -55,8 +60,10 @@ def send_email_with_files(subject, body, filepaths):
         server.login(SENDER_EMAIL, SENDER_PASSWORD)
         server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, msg.as_string())
         server.quit()
+        logger.info("Email sent successfully")  # Log email success
         return True
     except Exception as e:
+        logger.error(f"Email send error: {str(e)}", exc_info=True)  # Email error log
         return f"Email send error: {str(e)}"
 
 
@@ -65,10 +72,12 @@ def send_email_with_files(subject, body, filepaths):
 # -----------------------
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    logger.info("Index route called")  # Logging start
     error = None
     if request.method == 'POST':
         try:
             admission_no = str(request.form.get('admission_no')).strip()
+            logger.info(f"Searching student Admission No: {admission_no}")  # Logging
             dob = request.form.get('dob')
 
             students_df = pd.read_excel(STUDENTS_FILE)
@@ -96,22 +105,28 @@ def index():
 
             if student_row.empty:
                 error = "Student not found or DOB mismatch."
+                logger.warning("Student not found or DOB mismatch.")  # Logging warning
                 return render_template('search.html', error=error)
             else:
                 student_data = student_row.iloc[0].to_dict()
+                logger.info("Student found. Rendering index page.")  # Logging success
                 return render_template('index.html', student_data=student_data)
 
         except Exception as e:
+            logger.error(f"Error in index route: {str(e)}", exc_info=True)  # Error with traceback
             return f"Error while searching student: {str(e)}"
 
     # GET request
+    logger.info("Rendering search page (GET request)")  # GET log
     return render_template('search.html')
 
 
 @app.route('/submit', methods=['POST'])
 def submit():
+    logger.info("Submit route called")  # Logging start
     try:
         admission_no = str(request.form.get('admission_no')).strip()
+        logger.info(f"Processing submission for Admission No: {admission_no}")  # Logging
         data = request.form.to_dict()
 
         # -----------------------
@@ -130,6 +145,7 @@ def submit():
             file = request.files.get(field)
             if file and file.filename != '':
                 filepath = os.path.join(upload_folder, file.filename)
+                logger.info(f"Saving uploaded file: {filepath}")  # Logging file save
                 file.save(filepath)
                 uploaded_files.append(filepath)
 
@@ -138,11 +154,14 @@ def submit():
         # -----------------------
         subject = f"New Submission from Admission No: {admission_no}"
         body = f"Form data submitted:\n\n{data}"
+        logger.info("Sending email with attachments")  # Logging
         email_status = send_email_with_files(subject, body, uploaded_files)
+        logger.info(f"Email send status: {email_status}")  # Logging result
 
         # -----------------------
         # APPEND TO EXCEL
         # -----------------------
+        logger.info(f"Updating Excel file: {SUBMITTED_FILE}")  # Logging
         if os.path.exists(SUBMITTED_FILE):
             submitted_df = pd.read_excel(SUBMITTED_FILE)
         else:
@@ -151,18 +170,23 @@ def submit():
         new_row = pd.DataFrame([data])
         updated_df = pd.concat([submitted_df, new_row], ignore_index=True)
         updated_df.to_excel(SUBMITTED_FILE, index=False)
+        logger.info("Excel file updated successfully")  # Logging
 
         # Uploaded temp files ko delete kar dete hain
         for f in uploaded_files:
             if os.path.exists(f):
                 os.remove(f)
+                logger.info(f"Deleted temp file: {f}")  # Logging file deletion
 
         if email_status is True:
+            logger.info("Form submitted and email sent successfully")  # Log success
             return "Form submitted successfully and email sent!"
         else:
+            logger.warning(f"Form submitted but email failed: {email_status}")  # Log warning
             return f"Form submitted but {email_status}"
 
     except Exception as e:
+        logger.error(f"Error in submit route: {str(e)}", exc_info=True)  # Error log with traceback
         return f"Error while submitting form: {str(e)}"
 
 
