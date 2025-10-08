@@ -80,7 +80,7 @@ def index():
             logger.info(f"Searching student Admission No: {admission_no}")  # Logging
             dob = request.form.get('dob')
 
-            students_df = pd.read_csv(STUDENTS_FILE)
+            students_df = pd.read_excel(STUDENTS_FILE)
 
             # Column name normalization
             students_df.columns = students_df.columns.str.strip()
