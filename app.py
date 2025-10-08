@@ -22,7 +22,7 @@ SUBMITTED_FILE = "submitted_data.csv"
 # Create submitted_data.xlsx if it doesn't exist
 if not os.path.exists(SUBMITTED_FILE):
     df = pd.DataFrame()
-    df.to_excel(SUBMITTED_FILE, index=False)
+    df.to_csv(SUBMITTED_FILE, index=False)
 
 # -----------------------
 # GMAIL SETTINGS
@@ -80,7 +80,7 @@ def index():
             logger.info(f"Searching student Admission No: {admission_no}")  # Logging
             dob = request.form.get('dob')
 
-            students_df = pd.read_excel(STUDENTS_FILE)
+            students_df = pd.read_csv(STUDENTS_FILE)
 
             # Column name normalization
             students_df.columns = students_df.columns.str.strip()
