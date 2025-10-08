@@ -17,7 +17,7 @@ app = Flask(__name__)
 # EXCEL FILES
 # -----------------------
 STUDENTS_FILE = "students.xlsx"
-SUBMITTED_FILE = "submitted_data.xlsx"
+SUBMITTED_FILE = "submitted_data.csv"
 
 # Create submitted_data.xlsx if it doesn't exist
 if not os.path.exists(SUBMITTED_FILE):
@@ -61,7 +61,7 @@ def send_email_with_files(subject, body, filepaths):
         server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, msg.as_string())
         server.quit()
         logger.info("Email sent successfully")  # Log email success
-        return True
+        return True 
     except Exception as e:
         logger.error(f"Email send error: {str(e)}", exc_info=True)  # Email error log
         return f"Email send error: {str(e)}"
@@ -161,16 +161,27 @@ def submit():
         # -----------------------
         # APPEND TO EXCEL
         # -----------------------
-        logger.info(f"Updating Excel file: {SUBMITTED_FILE}")  # Logging
-        if os.path.exists(SUBMITTED_FILE):
-            submitted_df = pd.read_excel(SUBMITTED_FILE)
-        else:
-            submitted_df = pd.DataFrame()
+# -----------------------
+# APPEND TO CSV
+# -----------------------
+        logger.info(f"Appending data to CSV file: {SUBMITTED_FILE}")  # Logging
+        import csv
 
-        new_row = pd.DataFrame([data])
-        updated_df = pd.concat([submitted_df, new_row], ignore_index=True)
-        updated_df.to_excel(SUBMITTED_FILE, index=False)
-        logger.info("Excel file updated successfully")  # Logging
+        fieldnames = list(data.keys())
+        file_exists = os.path.isfile(SUBMITTED_FILE)
+
+        with open(SUBMITTED_FILE, 'a', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            if not file_exists:
+                writer.writeheader()
+            writer.writerow(data)
+
+        logger.info("CSV file updated successfully")  # Logging
+
+
+
+        
+        
 
         # Uploaded temp files ko delete kar dete hain
         for f in uploaded_files:
